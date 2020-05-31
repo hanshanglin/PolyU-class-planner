@@ -34,7 +34,19 @@ def test_api(name):
         if sem==None or data==None:
             return jsonify({})
         return jsonify(data_preprocess.limit_solve(sem,data))
+    if name == 'sharelink':
+        result = request.json
+        data = result.get('data', None)
+        if data==None or data == {}:
+            return jsonify({})
+        uuid = data_preprocess.gen_share_link(data)
+        return jsonify({'url':url_for("share_link",_external=True,uuid=uuid)})
 
+
+@app.route('/share/<uuid>')
+def share_link(uuid):
+    data = data_preprocess.get_share_data(uuid)
+    return render_template('index.html',data=data)
 
 @app.route('/')
 def index():

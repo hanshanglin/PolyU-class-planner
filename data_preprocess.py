@@ -1,15 +1,23 @@
 import pandas as pd
 import numpy as np
+import uuid 
+import os
+from flask import url_for
+import time
+import json
 
 def excel2df(sem1_path=".\\sem1.csv",sem2_path=".\\sem2.csv")->pd.DataFrame:
+    sem1_path = "."+os.sep+"static"+os.sep+"storage"+os.sep+"sem1.csv"
+    sem2_path = "."+os.sep+"static"+os.sep+"storage"+os.sep+"sem2.csv"
     with open(sem1_path,'r') as o:
         sem1 = pd.read_csv(o)
     with open(sem2_path,'r') as o:
         sem2 = pd.read_csv(o)
     sem1['sem'] = 1
     sem2['sem'] = 2
+    sem1.drop_duplicates(['sem','Subject Code','Subject Title','Component Code'],inplace=True)
+    sem2.drop_duplicates(['sem','Subject Code','Subject Title','Component Code'],inplace=True)
     df = pd.concat([sem1,sem2]).reset_index()
-    df.drop_duplicates(inplace=True)
     df.drop(df[df['Subject Code']== 'Subject Code'].index,inplace = True)
     df.drop(df[pd.isna(df['Day of Week'])].index,inplace = True)
     df['Start Time'] = df['Start Time'].map(lambda x:int(str(x).replace(":","")))
@@ -159,23 +167,23 @@ def detailed(df:pd.DataFrame,idx:list,sem:int):
     print(df)
     return df[df['index'].isin(idx)]
 
-# def limit_solve_test():
-#     df = excel2df(".\\sem1.csv",".\\sem2.csv")
-#     df = df[['index','Subject Code','Subject Title','Component Code','Day of Week','Start Time','End Time','sem']]
-#     ['COMP4434','COMP3421','COMP3334','COMP3511','AMA2112','COMP3021','AMA364']
-#     limit = {
-#         'COMP4434':{'forbid':[],'fixed':[]},
-#         'COMP3421':{'forbid':[],'fixed':[]},
-#         'COMP3334':{'forbid':[],'fixed':[]},
-#         'COMP3511':{'forbid':[],'fixed':[]},
-#         'AMA2112':{'forbid':[],'fixed':[]},
-#         'COMP3021':{'forbid':[],'fixed':[]},
-#         'AMA364':{'forbid':[],'fixed':[]},
+def limit_solve_test():
+    df = excel2df(".\\sem1.csv",".\\sem2.csv")
+    df = df[['index','Subject Code','Subject Title','Component Code','Day of Week','Start Time','End Time','sem']]
+    ['COMP4434','COMP3421','COMP3334','COMP3511','AMA2112','COMP3021','AMA364']
+    limit = {
+        'COMP4434':{'forbid':[],'fixed':[]},
+        'COMP3421':{'forbid':[],'fixed':[]},
+        'COMP3334':{'forbid':[],'fixed':[]},
+        'COMP3511':{'forbid':[],'fixed':[]},
+        'AMA2112':{'forbid':[],'fixed':[]},
+        'COMP3021':{'forbid':[],'fixed':[]},
+        'AMA364':{'forbid':[],'fixed':[]},
 
-#     }
-#     stat,ans= get_perfect_plan1(df,limit,sem=2)
-#     ans = detailed(df,ans[0],2)
-#     return ans.T.to_dict()
+    }
+    stat,ans= get_perfect_plan1(df,limit,sem=2)
+    ans = detailed(df,ans[0],2)
+    return ans.T.to_dict()
 
 def limit_solve(sem,limit):
     df = excel2df(".\\sem1.csv",".\\sem2.csv")
@@ -188,6 +196,7 @@ def limit_solve(sem,limit):
     return {'solve':stat,'result':ans}
 
 
+
 def test():
     df = excel2df(".\\sem1.csv",".\\sem2.csv")
     df = df[['index','Subject Code','Subject Title','Component Code','Day of Week','Start Time','End Time','sem']]
@@ -196,6 +205,30 @@ def test():
     ans = detailed(df,ans[0],2)
     return ans
 
+def gen_share_link(data):
+    save_path = "."+os.sep+"static"+os.sep+"storage"+os.sep+"share.save"
+    uid = uuid.uuid4()
+    uid = str(int(time.time()))+str(uid)[:8]
+    with open(save_path,'r') as f:
+        try:
+            profiles = json.load(f)
+        except ValueError:
+            profiles = {}
+    profiles[uid]=data
+    with open(save_path,'w') as f:
+        f.write(json.dumps(profiles))
+    return uid
+
+def get_share_data(uid):
+    save_path = "."+os.sep+"static"+os.sep+"storage"+os.sep+"share.save"
+    with open(save_path) as f:
+        try:
+            profiles = json.load(f)
+        except ValueError:
+            profiles = {}
+    if uid not in profiles.keys():
+        return None
+    return profiles[uid]
 
 if __name__ == "__main__":
     limit_solve_test()
