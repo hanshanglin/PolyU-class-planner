@@ -1,4 +1,3 @@
-
 function subjectSearch() {
     var department = $("#select-department").val();
     var sem = $("input[name='sem-select']:checked").val();
@@ -96,7 +95,8 @@ function share() {
         data: JSON.stringify({ 'data': cur_arrange }),
         contentType: 'application/json; charset=UTF-8',
         success: function (data) {
-            console.log(data)
+            $("#share-modal-body").text(data['url']);
+            $("#share-modal").modal("show");
         },
         error: function (data) {
             console.log(data);

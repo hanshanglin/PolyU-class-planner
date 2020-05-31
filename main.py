@@ -9,10 +9,6 @@ app.secret_key = os.urandom(24)
 
 @app.route('/api/<name>', methods=['POST'])
 def test_api(name):
-    if name == 'test':
-        data=data_preprocess.test().T.to_dict()
-        t = jsonify(data)
-        return t
     if name == 'subjectinfo':
         result = request.json
         sem = result.get('sem', None)
@@ -41,6 +37,7 @@ def test_api(name):
             return jsonify({})
         uuid = data_preprocess.gen_share_link(data)
         return jsonify({'url':url_for("share_link",_external=True,uuid=uuid)})
+    return jsonify({})
 
 
 @app.route('/share/<uuid>')

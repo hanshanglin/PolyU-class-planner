@@ -89,26 +89,6 @@ def gen_permutation(cur_sol:list,course_list:list,course_info:dict,time_record: 
     return
         
 
-def get_perfect_plan(data:pd.DataFrame,course:list,forbid:dict,sem = 1):
-    data = data[data['sem']==sem]
-    course_info = {}
-    course_permutation = []
-    for course_code in course:
-        info = data[data['Subject Code']==course_code]
-        info = info[['index','Subject Code','Component Code','Day of Week','Start Time','End Time']]
-        for row in info.itertuples(index=False):
-            index,code,component,day,start,end = row
-            if (course_code,component[:3]) not in course_permutation:
-                course_permutation.append((course_code,component[:3]))
-                course_info[(course_code,component[:3])] = [tuple(row)]
-            else:
-                course_info[(course_code,component[:3])].append(tuple(row))
-    
-    ans = []
-    time_table = {i:[] for i in ['Mon','Tue','Thu','Wed','Sat','Sun','Fri']} if forbid == None else forbid
-    gen_permutation([],course_permutation,course_info,time_table,ans)
-    return ans
-
 def get_perfect_plan1(data:pd.DataFrame,limit:dict):
     course = list(limit.keys())
     course_info = {}
@@ -162,28 +142,6 @@ def get_perfect_plan1(data:pd.DataFrame,limit:dict):
     return True,ans
 
 
-def detailed(df:pd.DataFrame,idx:list,sem:int):
-    
-    print(df)
-    return df[df['index'].isin(idx)]
-
-def limit_solve_test():
-    df = excel2df(".\\sem1.csv",".\\sem2.csv")
-    df = df[['index','Subject Code','Subject Title','Component Code','Day of Week','Start Time','End Time','sem']]
-    ['COMP4434','COMP3421','COMP3334','COMP3511','AMA2112','COMP3021','AMA364']
-    limit = {
-        'COMP4434':{'forbid':[],'fixed':[]},
-        'COMP3421':{'forbid':[],'fixed':[]},
-        'COMP3334':{'forbid':[],'fixed':[]},
-        'COMP3511':{'forbid':[],'fixed':[]},
-        'AMA2112':{'forbid':[],'fixed':[]},
-        'COMP3021':{'forbid':[],'fixed':[]},
-        'AMA364':{'forbid':[],'fixed':[]},
-
-    }
-    stat,ans= get_perfect_plan1(df,limit,sem=2)
-    ans = detailed(df,ans[0],2)
-    return ans.T.to_dict()
 
 def limit_solve(sem,limit):
     df = excel2df(".\\sem1.csv",".\\sem2.csv")
@@ -194,16 +152,6 @@ def limit_solve(sem,limit):
     if stat:
         ans = df[df['index'].isin(ans[0])].T.to_dict()
     return {'solve':stat,'result':ans}
-
-
-
-def test():
-    df = excel2df(".\\sem1.csv",".\\sem2.csv")
-    df = df[['index','Subject Code','Subject Title','Component Code','Day of Week','Start Time','End Time','sem']]
-    forbid = {i:[(0,0),(830,1)] for i in ['Mon','Tue','Thu','Wed','Sat','Sun','Fri']}
-    ans= get_perfect_plan(df,['COMP4434','COMP3421','COMP3334','COMP3511','AMA2112','COMP3021','AMA364'],forbid,sem=2)
-    ans = detailed(df,ans[0],2)
-    return ans
 
 def gen_share_link(data):
     save_path = "."+os.sep+"static"+os.sep+"storage"+os.sep+"share.save"
@@ -230,5 +178,3 @@ def get_share_data(uid):
         return None
     return profiles[uid]
 
-if __name__ == "__main__":
-    limit_solve_test()
